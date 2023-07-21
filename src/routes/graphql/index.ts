@@ -11,7 +11,7 @@ import {
   GraphQLInt,
   GraphQLBoolean,
 } from 'graphql';
-import { member, memberTypeId, post, profile } from './schema.js';
+import { memberTypeId } from './schema.js';
 import { UUIDType } from './types/uuid.js';
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -56,36 +56,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     }),
   });
 
-  const subscribers = new GraphQLObjectType({
-    name: 'SubscribersOnAuthors',
-    fields: () => ({
-      subscriber: {
-        type: user,
-        resolve: (source) => {
-          console.log('source in SubscribersOnAuthors: ', source);
-          // prisma.user.findUnique({
-          //   where: {
-          //     id: source.subscriberId,
-          //   },
-          // });
-          return source.subscriber;
-        },
-      },
-      subscriberId: { type: UUIDType },
-      authorId: { type: UUIDType },
-      author: {
-        type: user,
-        // resolve: (source) =>
-        //   prisma.user.findUnique({
-        //     where: {
-        //       id: source.authorId,
-        //     },
-        //   }),
-        resolve: (source) => source.author,
-      },
-    }),
-  });
-
   const user = new GraphQLObjectType({
     name: 'User',
     fields: () => ({
@@ -122,34 +92,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
               },
             },
           }),
-        // type: new GraphQLList(subscribers),
-        // resolve: async (source) => {
-        //   console.log('source in userSubscribedTo: ', source);
-        //   const subscribedToUserIds = await prisma.user.findMany({
-        //     where: {
-        //       subscribedToUser: {
-        //         some: {
-        //           subscriberId: source.id,
-        //         },
-        //       },
-        //     },
-        //   });
-        //   console.log(
-        //     'subscribedToUserIds: ',
-        //     subscribedToUserIds.map((_user) => ({
-        //       subscriber: source,
-        //       subscriberId: source.id,
-        //       author: _user,
-        //       authorId: _user.id,
-        //     })),
-        //   );
-        //   return subscribedToUserIds.map((_user) => ({
-        //     subscriber: source,
-        //     subscriberId: source.id,
-        //     author: _user,
-        //     authorId: _user.id,
-        //   }));
-        // },
       },
       subscribedToUser: {
         type: new GraphQLList(user),
@@ -163,24 +105,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
               },
             },
           }),
-        // type: new GraphQLList(subscribers),
-        // resolve: async (source) => {
-        //   const usersSubscr = await prisma.user.findMany({
-        //     where: {
-        //       userSubscribedTo: {
-        //         some: {
-        //           authorId: source.id,
-        //         },
-        //       },
-        //     },
-        //   });
-        //   return usersSubscr.map((_user) => ({
-        //     subscriber: _user,
-        //     subscriberId: _user.id,
-        //     author: source,
-        //     authorId: source.id,
-        //   }));
-        // },
       },
     }),
   });
