@@ -176,7 +176,6 @@ export const changePostInput = new GraphQLInputObjectType({
   name: 'ChangePostInput',
   fields: () => ({
     title: { type: GraphQLString },
-    // authorId: { type: UUIDType },
     content: { type: GraphQLString },
   }),
 });
@@ -184,10 +183,8 @@ export const changePostInput = new GraphQLInputObjectType({
 export const changeProfileInput = new GraphQLInputObjectType({
   name: 'ChangeProfileInput',
   fields: () => ({
-    // userId: { type: UUIDType },
     isMale: { type: GraphQLBoolean },
     yearOfBirth: { type: GraphQLInt },
-    // memberTypeId: { type: memberTypeId },
   }),
 });
 
