@@ -10,8 +10,8 @@ import {
   GraphQLNonNull,
 } from 'graphql';
 import { PrismaClient } from '@prisma/client';
-import { MemberTypeId } from '../member-types/schemas.js';
-import { UUIDType } from './types/uuid.js';
+import { MemberTypeId } from '../../member-types/schemas.js';
+import { UUIDType } from '../types/uuid.js';
 
 export const memberTypeId = new GraphQLEnumType({
   name: 'MemberTypeId',

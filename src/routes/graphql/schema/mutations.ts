@@ -11,7 +11,7 @@ import {
   changeUserInput,
 } from './graphqlTypes.js';
 import { PrismaClient } from '@prisma/client';
-import { UUIDType } from './types/uuid.js';
+import { UUIDType } from '../types/uuid.js';
 
 export const mutation = new GraphQLObjectType({
   name: 'Mutation',
