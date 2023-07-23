@@ -19,7 +19,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     async handler(req, reply) {
       const validateErr = validate(schema, parse(req.body.query), [depthLimit(5)]);
       console.log('request: ', req.body.query, req.body.variables);
-      console.log('validate: ', validateErr);
+      // console.log('validate: ', validateErr);
       if (validateErr.length) {
         reply.send({ errors: validateErr });
       } else {

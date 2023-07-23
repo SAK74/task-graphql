@@ -14,7 +14,7 @@ import { UUIDType } from '../types/uuid.js';
 import { PrismaClient } from '@prisma/client';
 import DataLoader from 'dataloader';
 
-interface CtxType {
+export interface CtxType {
   prisma: PrismaClient;
   dataloaders: WeakMap<{ [k: string]: any }, DataLoader<string, unknown>>;
 }

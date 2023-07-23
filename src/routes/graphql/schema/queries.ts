@@ -1,31 +1,50 @@
 import { GraphQLObjectType, GraphQLList, GraphQLNonNull } from 'graphql';
-import { member, post, profile, user, memberTypeId } from './graphqlTypes.js';
-import { PrismaClient } from '@prisma/client';
+import { member, post, profile, user, memberTypeId, CtxType } from './graphqlTypes.js';
 import { UUIDType } from '../types/uuid.js';
+import {
+  parseResolveInfo,
+  simplifyParsedResolveInfoFragmentWithType,
+  ResolveTree,
+} from 'graphql-parse-resolve-info';
 
 export const query = new GraphQLObjectType({
   name: 'Query',
   fields: {
     memberTypes: {
       type: new GraphQLList(member),
-      resolve: (_source, _args, { prisma }, info) => {
+      resolve: (_source, _args, { prisma }: CtxType, info) => {
         console.log('params (info): ', info);
         return prisma.memberType.findMany();
       },
     },
     posts: {
       type: new GraphQLList(post),
-      resolve: (_source, _args, { prisma }) => prisma.post.findMany(),
+      resolve: (_source, _args, { prisma }: CtxType) => prisma.post.findMany(),
     },
     users: {
       type: new GraphQLList(user),
-      resolve: (source, args, { prisma }) => {
-        return prisma.user.findMany();
+      resolve: (source, args, { prisma }: CtxType, info) => {
+        const parsedResolveInfoFragment = parseResolveInfo(info);
+        const { fields } = simplifyParsedResolveInfoFragmentWithType(
+          parsedResolveInfoFragment as ResolveTree,
+          new GraphQLList(user),
+        );
+        console.log('resolve tree: ', parsedResolveInfoFragment);
+        console.log('simpli fields: ', fields);
+        const fieldsNames = Object.keys(fields);
+        console.log('test subscribedToUser: ', fieldsNames.includes('subscribedToUser'));
+        console.log('test userSubscribedTo: ', fieldsNames.includes('userSubscribedTo'));
+        return prisma.user.findMany({
+          include: {
+            subscribedToUser: fieldsNames.includes('subscribedToUser'),
+            userSubscribedTo: fieldsNames.includes('userSubscribedTo'),
+          },
+        });
       },
     },
     profiles: {
       type: new GraphQLList(profile),
-      resolve: (_source, _args, { prisma }) => prisma.profile.findMany(),
+      resolve: (_source, _args, { prisma }: CtxType) => prisma.profile.findMany(),
     },
     memberType: {
       type: member,
@@ -34,7 +53,7 @@ export const query = new GraphQLObjectType({
           type: new GraphQLNonNull(memberTypeId),
         },
       },
-      resolve: (source, args, { prisma }, info) =>
+      resolve: (source, args, { prisma }: CtxType, info) =>
         prisma.memberType.findUnique({
           where: {
             id: args.id,
@@ -44,7 +63,7 @@ export const query = new GraphQLObjectType({
     post: {
       type: post,
       args: { id: { type: new GraphQLNonNull(UUIDType) } },
-      resolve: (_source, args, { prisma }) =>
+      resolve: (_source, args, { prisma }: CtxType) =>
         prisma.post.findUnique({
           where: {
             id: args.id,
@@ -56,7 +75,7 @@ export const query = new GraphQLObjectType({
       args: {
         id: { type: new GraphQLNonNull(UUIDType) },
       },
-      resolve: (source, args, { prisma }, info) =>
+      resolve: (source, args, { prisma }: CtxType, info) =>
         prisma.user.findUnique({
           where: {
             id: args.id,
@@ -66,7 +85,7 @@ export const query = new GraphQLObjectType({
     profile: {
       type: profile,
       args: { id: { type: new GraphQLNonNull(UUIDType) } },
-      resolve: (_source, args, { prisma }) =>
+      resolve: (_source, args, { prisma }: CtxType) =>
         prisma.profile.findUnique({
           where: {
             id: args.id,
