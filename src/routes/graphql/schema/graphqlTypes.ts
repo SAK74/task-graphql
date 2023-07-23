@@ -9,11 +9,15 @@ import {
   GraphQLInputObjectType,
   GraphQLNonNull,
 } from 'graphql';
-// import { PrismaClient } from '@prisma/client';
 import { MemberTypeId } from '../../member-types/schemas.js';
 import { UUIDType } from '../types/uuid.js';
 import { PrismaClient } from '@prisma/client';
 import DataLoader from 'dataloader';
+
+interface CtxType {
+  prisma: PrismaClient;
+  dataloaders: WeakMap<{ [k: string]: any }, DataLoader<string, unknown>>;
+}
 
 export const memberTypeId = new GraphQLEnumType({
   name: 'MemberTypeId',
@@ -35,16 +39,7 @@ export const member = new GraphQLObjectType({
     postsLimitPerMonth: { type: GraphQLInt },
     profiles: {
       type: new GraphQLList(profile),
-      resolve: (
-        source,
-        _args,
-        {
-          prisma,
-        }: {
-          prisma: PrismaClient;
-          dataLoaders: WeakMap<{ [k: string]: any }, DataLoader<string, any>>;
-        },
-      ) =>
+      resolve: (source, _args, { prisma }: CtxType) =>
         prisma.profile.findMany({
           where: {
             memberTypeId: source.id,
@@ -64,7 +59,7 @@ export const post = new GraphQLObjectType({
     content: { type: GraphQLString },
     author: {
       type: user,
-      resolve: (source, _args, { prisma }) =>
+      resolve: (source, _args, { prisma }: CtxType) =>
         prisma.user.findUnique({
           where: {
             id: source.authorId,
@@ -81,49 +76,103 @@ export const user = new GraphQLObjectType({
     id: { type: UUIDType },
     name: { type: GraphQLString },
     balance: { type: GraphQLString },
+
     profile: {
       type: profile,
-      resolve: (source, _args, { prisma }) =>
-        prisma.profile.findUnique({
-          where: {
-            userId: source.id,
-          },
-        }),
+      resolve: (source, _args, { prisma, dataloaders }: CtxType, info) => {
+        let dl = dataloaders.get(info.fieldNodes);
+        if (!dl) {
+          dl = new DataLoader(async (idx) => {
+            const profiles = await prisma.profile.findMany({
+              where: { userId: { in: idx as string[] } },
+            });
+            return idx.map((id) => profiles.find(({ userId }) => userId === id));
+          });
+          dataloaders.set(info.fieldNodes, dl);
+        }
+        return dl.load(source.id);
+      },
+      // prisma.profile.findUnique({
+      //   where: {
+      //     userId: source.id,
+      //   },
+      // }),
     },
+
     posts: {
       type: new GraphQLList(post),
-      resolve: (source, _args, { prisma }) =>
-        prisma.post.findMany({
-          where: {
-            authorId: source.id,
-          },
-        }),
+      resolve: (source, _args, { prisma, dataloaders }, info) => {
+        let dl = dataloaders.get(info.fieldNodes);
+        if (!dl) {
+          dl = new DataLoader(async (idx) => {
+            const posts = await prisma.post.findMany({
+              where: {
+                authorId: { in: idx as string[] },
+              },
+            });
+            return idx.map((id) => posts.filter(({ authorId }) => authorId === id));
+          });
+          dataloaders.set(info.fieldNodes, dl);
+        }
+        const post = dl.load(source.id);
+        return post;
+      },
     },
+
     userSubscribedTo: {
       type: new GraphQLList(user),
-      resolve: (source, _args, { prisma }) =>
-        prisma.user.findMany({
-          where: {
-            subscribedToUser: {
-              some: {
-                subscriberId: source.id,
+      resolve: (source, _args, { prisma, dataloaders }, info) => {
+        let dl = dataloaders.get(info.fieldNodes);
+        if (!dl) {
+          dl = new DataLoader(async (idx) => {
+            const authors = await prisma.user.findMany({
+              include: { subscribedToUser: true },
+              where: {
+                subscribedToUser: {
+                  some: {
+                    subscriberId: { in: idx as string[] },
+                  },
+                },
               },
-            },
-          },
-        }),
+            });
+            return idx.map((id) =>
+              authors.filter(({ subscribedToUser }) =>
+                subscribedToUser.some((user) => user.subscriberId === id),
+              ),
+            );
+          });
+          dataloaders.set(info.fieldNodes, dl);
+        }
+        return dl.load(source.id);
+      },
     },
+
     subscribedToUser: {
       type: new GraphQLList(user),
-      resolve: (source, _args, { prisma }) =>
-        prisma.user.findMany({
-          where: {
-            userSubscribedTo: {
-              some: {
-                authorId: source.id,
+      resolve: (source, _args, { prisma, dataloaders }: CtxType, info) => {
+        let dl = dataloaders.get(info.fieldNodes);
+        if (!dl) {
+          dl = new DataLoader(async (idx) => {
+            const subscribers = await prisma.user.findMany({
+              include: { userSubscribedTo: true },
+              where: {
+                userSubscribedTo: {
+                  some: {
+                    authorId: { in: idx as string[] },
+                  },
+                },
               },
-            },
-          },
-        }),
+            });
+            return idx.map((id) =>
+              subscribers.filter(({ userSubscribedTo }) =>
+                userSubscribedTo.some((user) => user.authorId === id),
+              ),
+            );
+          });
+          dataloaders.set(info.fieldNodes, dl);
+        }
+        return dl.load(source.id);
+      },
     },
   }),
 });
@@ -146,21 +195,26 @@ export const profile = new GraphQLObjectType({
     userId: { type: UUIDType },
     memberType: {
       type: member,
-      resolve: (
-        source,
-        _args,
-        {
-          prisma,
-        }: {
-          prisma: PrismaClient;
-          dataLoaders: WeakMap<{ [k: string]: any }, DataLoader<string, any>>;
-        },
-      ) =>
-        prisma.memberType.findUnique({
-          where: {
-            id: source.memberTypeId,
-          },
-        }),
+      resolve: (source, _args, { prisma, dataloaders }: CtxType, info) => {
+        let dl = dataloaders.get(info.fieldNodes);
+        if (!dl) {
+          dl = new DataLoader(async (idx) => {
+            const members = await prisma.memberType.findMany({
+              where: {
+                id: { in: idx as string[] },
+              },
+            });
+            return idx.map((id) => members.find((m) => m.id === id));
+          });
+          dataloaders.set(info.fieldNodes, dl);
+        }
+        return dl.load(source.memberTypeId);
+      },
+      // prisma.memberType.findUnique({
+      //   where: {
+      //     id: source.memberTypeId,
+      //   },
+      // }),
     },
   }),
 });
