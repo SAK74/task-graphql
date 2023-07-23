@@ -8,22 +8,24 @@ export const query = new GraphQLObjectType({
   fields: {
     memberTypes: {
       type: new GraphQLList(member),
-      resolve: (_source, _args, prisma: PrismaClient) => prisma.memberType.findMany(),
+      resolve: (_source, _args, { prisma }, info) => {
+        console.log('params (info): ', info);
+        return prisma.memberType.findMany();
+      },
     },
     posts: {
       type: new GraphQLList(post),
-      resolve: (_source, _args, prisma: PrismaClient) => prisma.post.findMany(),
+      resolve: (_source, _args, { prisma }) => prisma.post.findMany(),
     },
     users: {
       type: new GraphQLList(user),
-      resolve: (source, args, prisma: PrismaClient) => {
-        // console.log('Context: ', ctx);
+      resolve: (source, args, { prisma }) => {
         return prisma.user.findMany();
       },
     },
     profiles: {
       type: new GraphQLList(profile),
-      resolve: (_source, _args, prisma: PrismaClient) => prisma.profile.findMany(),
+      resolve: (_source, _args, { prisma }) => prisma.profile.findMany(),
     },
     memberType: {
       type: member,
@@ -32,7 +34,7 @@ export const query = new GraphQLObjectType({
           type: new GraphQLNonNull(memberTypeId),
         },
       },
-      resolve: (source, args, prisma: PrismaClient, info) =>
+      resolve: (source, args, { prisma }, info) =>
         prisma.memberType.findUnique({
           where: {
             id: args.id,
@@ -42,7 +44,7 @@ export const query = new GraphQLObjectType({
     post: {
       type: post,
       args: { id: { type: new GraphQLNonNull(UUIDType) } },
-      resolve: (_source, args, prisma: PrismaClient) =>
+      resolve: (_source, args, { prisma }) =>
         prisma.post.findUnique({
           where: {
             id: args.id,
@@ -54,7 +56,7 @@ export const query = new GraphQLObjectType({
       args: {
         id: { type: new GraphQLNonNull(UUIDType) },
       },
-      resolve: (source, args, prisma: PrismaClient, info) =>
+      resolve: (source, args, { prisma }, info) =>
         prisma.user.findUnique({
           where: {
             id: args.id,
@@ -64,7 +66,7 @@ export const query = new GraphQLObjectType({
     profile: {
       type: profile,
       args: { id: { type: new GraphQLNonNull(UUIDType) } },
-      resolve: (_source, args, prisma: PrismaClient) =>
+      resolve: (_source, args, { prisma }) =>
         prisma.profile.findUnique({
           where: {
             id: args.id,

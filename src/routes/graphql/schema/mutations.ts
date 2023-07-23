@@ -10,7 +10,7 @@ import {
   createUserInput,
   changeUserInput,
 } from './graphqlTypes.js';
-import { PrismaClient } from '@prisma/client';
+// import { PrismaClient } from '@prisma/client';
 import { UUIDType } from '../types/uuid.js';
 
 export const mutation = new GraphQLObjectType({
@@ -21,7 +21,7 @@ export const mutation = new GraphQLObjectType({
       args: {
         dto: { type: new GraphQLNonNull(createPostInput) },
       },
-      resolve: (_source, args, prisma: PrismaClient) =>
+      resolve: (_source, args, { prisma }) =>
         prisma.post.create({
           data: args.dto,
         }),
@@ -31,7 +31,7 @@ export const mutation = new GraphQLObjectType({
       args: {
         dto: { type: new GraphQLNonNull(createUserInput) },
       },
-      resolve: (_source, args, prisma: PrismaClient) =>
+      resolve: (_source, args, { prisma }) =>
         prisma.user.create({
           data: args.dto,
         }),
@@ -41,7 +41,7 @@ export const mutation = new GraphQLObjectType({
       args: {
         dto: { type: new GraphQLNonNull(createProfileInput) },
       },
-      resolve: (_source, args, prisma: PrismaClient) =>
+      resolve: (_source, args, { prisma }) =>
         prisma.profile.create({
           data: args.dto,
         }),
@@ -49,7 +49,7 @@ export const mutation = new GraphQLObjectType({
     deletePost: {
       type: GraphQLBoolean,
       args: { id: { type: UUIDType } },
-      resolve: async (_source, args, prisma: PrismaClient) => {
+      resolve: async (_source, args, { prisma }) => {
         try {
           await prisma.post.delete({
             where: {
@@ -65,7 +65,7 @@ export const mutation = new GraphQLObjectType({
     deleteProfile: {
       type: GraphQLBoolean,
       args: { id: { type: UUIDType } },
-      resolve: async (_source, args, prisma: PrismaClient) => {
+      resolve: async (_source, args, { prisma }) => {
         try {
           await prisma.profile.delete({
             where: {
@@ -81,7 +81,7 @@ export const mutation = new GraphQLObjectType({
     deleteUser: {
       type: GraphQLBoolean,
       args: { id: { type: UUIDType } },
-      resolve: async (_source, args, prisma: PrismaClient) => {
+      resolve: async (_source, args, { prisma }) => {
         try {
           await prisma.user.delete({
             where: {
@@ -100,7 +100,7 @@ export const mutation = new GraphQLObjectType({
         id: { type: new GraphQLNonNull(UUIDType) },
         dto: { type: new GraphQLNonNull(changePostInput) },
       },
-      resolve: (_source, args, prisma: PrismaClient) =>
+      resolve: (_source, args, { prisma }) =>
         prisma.post.update({
           where: { id: args.id },
           data: args.dto,
@@ -112,7 +112,7 @@ export const mutation = new GraphQLObjectType({
         id: { type: new GraphQLNonNull(UUIDType) },
         dto: { type: new GraphQLNonNull(changeProfileInput) },
       },
-      resolve: (_source, args, prisma: PrismaClient) =>
+      resolve: (_source, args, { prisma }) =>
         prisma.profile.update({
           where: { id: args.id },
           data: args.dto,
@@ -124,7 +124,7 @@ export const mutation = new GraphQLObjectType({
         id: { type: new GraphQLNonNull(UUIDType) },
         dto: { type: new GraphQLNonNull(changeUserInput) },
       },
-      resolve: (_source, args, prisma: PrismaClient) =>
+      resolve: (_source, args, { prisma }) =>
         prisma.user.update({
           where: { id: args.id },
           data: args.dto,
@@ -136,7 +136,7 @@ export const mutation = new GraphQLObjectType({
         userId: { type: new GraphQLNonNull(UUIDType) },
         authorId: { type: new GraphQLNonNull(UUIDType) },
       },
-      resolve: (_source, args, prisma: PrismaClient) => {
+      resolve: (_source, args, { prisma }) => {
         return prisma.user.update({
           where: { id: args.userId },
           data: {
@@ -153,7 +153,7 @@ export const mutation = new GraphQLObjectType({
         userId: { type: new GraphQLNonNull(UUIDType) },
         authorId: { type: new GraphQLNonNull(UUIDType) },
       },
-      resolve: async (_source, args, prisma: PrismaClient) => {
+      resolve: async (_source, args, { prisma }) => {
         try {
           await prisma.subscribersOnAuthors.delete({
             where: {

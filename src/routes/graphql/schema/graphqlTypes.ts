@@ -9,9 +9,11 @@ import {
   GraphQLInputObjectType,
   GraphQLNonNull,
 } from 'graphql';
-import { PrismaClient } from '@prisma/client';
+// import { PrismaClient } from '@prisma/client';
 import { MemberTypeId } from '../../member-types/schemas.js';
 import { UUIDType } from '../types/uuid.js';
+import { PrismaClient } from '@prisma/client';
+import DataLoader from 'dataloader';
 
 export const memberTypeId = new GraphQLEnumType({
   name: 'MemberTypeId',
@@ -33,7 +35,16 @@ export const member = new GraphQLObjectType({
     postsLimitPerMonth: { type: GraphQLInt },
     profiles: {
       type: new GraphQLList(profile),
-      resolve: (source, _args, prisma: PrismaClient) =>
+      resolve: (
+        source,
+        _args,
+        {
+          prisma,
+        }: {
+          prisma: PrismaClient;
+          dataLoaders: WeakMap<{ [k: string]: any }, DataLoader<string, any>>;
+        },
+      ) =>
         prisma.profile.findMany({
           where: {
             memberTypeId: source.id,
@@ -53,7 +64,7 @@ export const post = new GraphQLObjectType({
     content: { type: GraphQLString },
     author: {
       type: user,
-      resolve: (source, _args, prisma: PrismaClient) =>
+      resolve: (source, _args, { prisma }) =>
         prisma.user.findUnique({
           where: {
             id: source.authorId,
@@ -72,7 +83,7 @@ export const user = new GraphQLObjectType({
     balance: { type: GraphQLString },
     profile: {
       type: profile,
-      resolve: (source, _args, prisma: PrismaClient) =>
+      resolve: (source, _args, { prisma }) =>
         prisma.profile.findUnique({
           where: {
             userId: source.id,
@@ -81,7 +92,7 @@ export const user = new GraphQLObjectType({
     },
     posts: {
       type: new GraphQLList(post),
-      resolve: (source, _args, prisma: PrismaClient) =>
+      resolve: (source, _args, { prisma }) =>
         prisma.post.findMany({
           where: {
             authorId: source.id,
@@ -90,7 +101,7 @@ export const user = new GraphQLObjectType({
     },
     userSubscribedTo: {
       type: new GraphQLList(user),
-      resolve: (source, _args, prisma: PrismaClient) =>
+      resolve: (source, _args, { prisma }) =>
         prisma.user.findMany({
           where: {
             subscribedToUser: {
@@ -103,7 +114,7 @@ export const user = new GraphQLObjectType({
     },
     subscribedToUser: {
       type: new GraphQLList(user),
-      resolve: (source, _args, prisma: PrismaClient) =>
+      resolve: (source, _args, { prisma }) =>
         prisma.user.findMany({
           where: {
             userSubscribedTo: {
@@ -125,7 +136,7 @@ export const profile = new GraphQLObjectType({
     yearOfBirth: { type: GraphQLInt },
     user: {
       type: user,
-      resolve: (source, _args, prisma: PrismaClient) =>
+      resolve: (source, _args, { prisma }) =>
         prisma.user.findUnique({
           where: {
             id: source.userId,
@@ -135,7 +146,16 @@ export const profile = new GraphQLObjectType({
     userId: { type: UUIDType },
     memberType: {
       type: member,
-      resolve: (source, _args, prisma: PrismaClient) =>
+      resolve: (
+        source,
+        _args,
+        {
+          prisma,
+        }: {
+          prisma: PrismaClient;
+          dataLoaders: WeakMap<{ [k: string]: any }, DataLoader<string, any>>;
+        },
+      ) =>
         prisma.memberType.findUnique({
           where: {
             id: source.memberTypeId,
