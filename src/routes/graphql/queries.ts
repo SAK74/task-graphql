@@ -1,5 +1,4 @@
 import { GraphQLObjectType, GraphQLList, GraphQLNonNull } from 'graphql';
-// import { member, post, profile, user, memberTypeId, CtxType } from './graphqlTypes.js';
 import { UUIDType } from './types/uuid.js';
 import {
   parseResolveInfo,
@@ -17,8 +16,7 @@ export const query = new GraphQLObjectType({
   fields: {
     memberTypes: {
       type: new GraphQLList(member),
-      resolve: (_source, _args, { prisma }: CtxType, info) => {
-        console.log('params (info): ', info);
+      resolve: (_source, _args, { prisma }: CtxType) => {
         return prisma.memberType.findMany();
       },
     },
@@ -34,11 +32,9 @@ export const query = new GraphQLObjectType({
           parsedResolveInfoFragment as ResolveTree,
           new GraphQLList(user),
         );
-        console.log('resolve tree: ', parsedResolveInfoFragment);
-        console.log('simpli fields: ', fields);
+        // console.log('resolve tree: ', parsedResolveInfoFragment);
+        // console.log('simpli fields: ', fields);
         const fieldsNames = Object.keys(fields);
-        console.log('test subscribedToUser: ', fieldsNames.includes('subscribedToUser'));
-        console.log('test userSubscribedTo: ', fieldsNames.includes('userSubscribedTo'));
         return prisma.user.findMany({
           include: {
             subscribedToUser: fieldsNames.includes('subscribedToUser'),

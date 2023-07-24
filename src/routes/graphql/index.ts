@@ -18,8 +18,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     async handler(req, reply) {
       const validateErr = validate(schema, parse(req.body.query), [depthLimit(5)]);
-      console.log('request: ', req.body.query, req.body.variables);
-      // console.log('validate: ', validateErr);
+      // console.log('request: ', req.body.query, req.body.variables);
       if (validateErr.length) {
         reply.send({ errors: validateErr });
       } else {
@@ -29,7 +28,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           variableValues: req.body.variables,
           contextValue: { prisma, dataloaders: new WeakMap() },
         });
-        console.log('result: ', res);
+        // console.log('result: ', res);
         return res;
       }
     },
