@@ -1,17 +1,20 @@
 import { GraphQLObjectType, GraphQLBoolean, GraphQLNonNull } from 'graphql';
-import {
-  post,
-  profile,
-  user,
-  createPostInput,
-  changePostInput,
-  createProfileInput,
-  changeProfileInput,
-  createUserInput,
-  changeUserInput,
-} from './graphqlTypes.js';
+// import {
+//   post,
+//   profile,
+//   user,
+//   createPostInput,
+//   changePostInput,
+//   createProfileInput,
+//   changeProfileInput,
+//   createUserInput,
+//   changeUserInput,
+// } from './graphqlTypes.js';
 // import { PrismaClient } from '@prisma/client';
-import { UUIDType } from '../types/uuid.js';
+import { UUIDType } from './types/uuid.js';
+import { changePostInput, createPostInput, post } from './types/post.js';
+import { changeUserInput, createUserInput, user } from './types/user.js';
+import { changeProfileInput, createProfileInput, profile } from './types/profile.js';
 
 export const mutation = new GraphQLObjectType({
   name: 'Mutation',

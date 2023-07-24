@@ -1,74 +1,16 @@
 import {
-  GraphQLEnumType,
   GraphQLObjectType,
   GraphQLString,
   GraphQLList,
   GraphQLFloat,
-  GraphQLInt,
-  GraphQLBoolean,
   GraphQLInputObjectType,
   GraphQLNonNull,
 } from 'graphql';
-import { MemberTypeId } from '../../member-types/schemas.js';
 import { UUIDType } from '../types/uuid.js';
-import { PrismaClient } from '@prisma/client';
 import DataLoader from 'dataloader';
-
-export interface CtxType {
-  prisma: PrismaClient;
-  dataloaders: WeakMap<{ [k: string]: any }, DataLoader<string, unknown>>;
-}
-
-export const memberTypeId = new GraphQLEnumType({
-  name: 'MemberTypeId',
-  values: {
-    basic: {
-      value: MemberTypeId.BASIC,
-    },
-    business: {
-      value: MemberTypeId.BUSINESS,
-    },
-  },
-});
-
-export const member = new GraphQLObjectType({
-  name: 'Member',
-  fields: () => ({
-    id: { type: memberTypeId },
-    discount: { type: GraphQLFloat },
-    postsLimitPerMonth: { type: GraphQLInt },
-    profiles: {
-      type: new GraphQLList(profile),
-      resolve: (source, _args, { prisma }: CtxType) =>
-        prisma.profile.findMany({
-          where: {
-            memberTypeId: source.id,
-          },
-        }),
-    },
-  }),
-});
-
-export const post = new GraphQLObjectType({
-  name: 'Post',
-  fields: () => ({
-    id: {
-      type: UUIDType,
-    },
-    title: { type: GraphQLString },
-    content: { type: GraphQLString },
-    author: {
-      type: user,
-      resolve: (source, _args, { prisma }: CtxType) =>
-        prisma.user.findUnique({
-          where: {
-            id: source.authorId,
-          },
-        }),
-    },
-    authorId: { type: UUIDType },
-  }),
-});
+import { profile } from './profile.js';
+import { CtxType } from './context.js';
+import { post } from './post.js';
 
 export const user = new GraphQLObjectType({
   name: 'User',
@@ -177,88 +119,11 @@ export const user = new GraphQLObjectType({
   }),
 });
 
-export const profile = new GraphQLObjectType({
-  name: 'Profile',
-  fields: () => ({
-    id: { type: UUIDType },
-    isMale: { type: GraphQLBoolean },
-    yearOfBirth: { type: GraphQLInt },
-    user: {
-      type: user,
-      resolve: (source, _args, { prisma }) =>
-        prisma.user.findUnique({
-          where: {
-            id: source.userId,
-          },
-        }),
-    },
-    userId: { type: UUIDType },
-    memberType: {
-      type: member,
-      resolve: (source, _args, { prisma, dataloaders }: CtxType, info) => {
-        let dl = dataloaders.get(info.fieldNodes);
-        if (!dl) {
-          dl = new DataLoader(async (idx) => {
-            const members = await prisma.memberType.findMany({
-              where: {
-                id: { in: idx as string[] },
-              },
-            });
-            return idx.map((id) => members.find((m) => m.id === id));
-          });
-          dataloaders.set(info.fieldNodes, dl);
-        }
-        return dl.load(source.memberTypeId);
-      },
-      // prisma.memberType.findUnique({
-      //   where: {
-      //     id: source.memberTypeId,
-      //   },
-      // }),
-    },
-  }),
-});
-
-export const createPostInput = new GraphQLInputObjectType({
-  name: 'CreatePostInput',
-  fields: () => ({
-    title: { type: new GraphQLNonNull(GraphQLString) },
-    authorId: { type: new GraphQLNonNull(UUIDType) },
-    content: { type: new GraphQLNonNull(GraphQLString) },
-  }),
-});
-
 export const createUserInput = new GraphQLInputObjectType({
   name: 'CreateUserInput',
   fields: () => ({
     name: { type: new GraphQLNonNull(GraphQLString) },
     balance: { type: new GraphQLNonNull(GraphQLFloat) },
-  }),
-});
-
-export const createProfileInput = new GraphQLInputObjectType({
-  name: 'CreateProfileInput',
-  fields: () => ({
-    userId: { type: new GraphQLNonNull(UUIDType) },
-    isMale: { type: new GraphQLNonNull(GraphQLBoolean) },
-    yearOfBirth: { type: new GraphQLNonNull(GraphQLInt) },
-    memberTypeId: { type: new GraphQLNonNull(memberTypeId) },
-  }),
-});
-
-export const changePostInput = new GraphQLInputObjectType({
-  name: 'ChangePostInput',
-  fields: () => ({
-    title: { type: GraphQLString },
-    content: { type: GraphQLString },
-  }),
-});
-
-export const changeProfileInput = new GraphQLInputObjectType({
-  name: 'ChangeProfileInput',
-  fields: () => ({
-    isMale: { type: GraphQLBoolean },
-    yearOfBirth: { type: GraphQLInt },
   }),
 });
 

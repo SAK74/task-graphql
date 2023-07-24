@@ -1,11 +1,16 @@
 import { GraphQLObjectType, GraphQLList, GraphQLNonNull } from 'graphql';
-import { member, post, profile, user, memberTypeId, CtxType } from './graphqlTypes.js';
-import { UUIDType } from '../types/uuid.js';
+// import { member, post, profile, user, memberTypeId, CtxType } from './graphqlTypes.js';
+import { UUIDType } from './types/uuid.js';
 import {
   parseResolveInfo,
   simplifyParsedResolveInfoFragmentWithType,
   ResolveTree,
 } from 'graphql-parse-resolve-info';
+import { member, memberTypeId } from './types/member.js';
+import { CtxType } from './types/context.js';
+import { post } from './types/post.js';
+import { user } from './types/user.js';
+import { profile } from './types/profile.js';
 
 export const query = new GraphQLObjectType({
   name: 'Query',
